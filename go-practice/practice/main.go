@@ -4,10 +4,11 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
 
@@ -28,7 +29,7 @@ var (
 	chartRepo       = "https://charts.bitnami.com/bitnami"
 	targetNamespace = "custom-nginx"
 	helmReleaseName = "my-release"
-	loadedChart     *chart.Chart
+	// loadedChart     *chart.Chart
 )
 
 func init() {
@@ -73,41 +74,60 @@ func init() {
 	install.Namespace = targetNamespace
 	install.ChartPathOptions.RepoURL = chartRepo
 
-	// Tải chart
-	log.Printf("🌐 Đang tìm chart '%s' từ repo: %s", chartName, chartRepo)
-	chartPath, err := install.ChartPathOptions.LocateChart(chartName, settings)
-	if err != nil {
-		log.Fatalf("❌ Không tìm được chart: %v", err)
-	}
-	log.Printf("📥 Đã tải chart tại: %s", chartPath)
-
-	// Load chart
-	log.Println("📂 Đang load chart...")
-	loadedChart, err = loader.Load(chartPath)
-	if err != nil {
-		log.Fatalf("❌ Không thể load chart: %v", err)
-	}
 }
 
 func deploy(c *gin.Context) {
 	namespace := c.Param("namespace")
 
+	// ⚙️ Init Helm action config
 	actionConfig := new(action.Configuration)
 	if err := actionConfig.Init(settings.RESTClientGetter(), namespace, "", log.Printf); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	// ⚙️ Tạo install action
 	install := action.NewInstall(actionConfig)
 	install.ReleaseName = helmReleaseName
 	install.Namespace = namespace
+	install.ChartPathOptions.RepoURL = chartRepo
 
-	release, err := install.Run(loadedChart, nil)
+	// 🌐 Tải chart
+	log.Printf("🌐 Đang tìm chart '%s' từ repo: %s", chartName, chartRepo)
+	chartPath, err := install.ChartPathOptions.LocateChart(chartName, settings)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không tìm được chart: " + err.Error()})
+		return
+	}
+	log.Printf("📥 Đã tải chart tại: %s", chartPath)
+
+	// 📂 Load chart
+	log.Println("📂 Đang load chart...")
+	loadedChart, err := loader.Load(chartPath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể load chart: " + err.Error()})
 		return
 	}
 
+	// 🚀 Deploy chart
+	release, err := install.Run(loadedChart, nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi khi deploy: " + err.Error()})
+		return
+	}
+
+	// 🧹 Xoá chart file tạm sau khi cài xong (nếu không cần giữ lại)
+	go func(path string) {
+		time.Sleep(2 * time.Second) // delay nhẹ để chắc chắn Helm đã dùng xong
+		err := os.Remove(path)
+		if err != nil {
+			log.Printf("⚠️ Không thể xoá chart file: %v", err)
+		} else {
+			log.Println("🧹 Đã xoá chart file tạm:", path)
+		}
+	}(chartPath)
+
+	// ✅ Trả kết quả
 	c.JSON(http.StatusOK, gin.H{
 		"message": "✅ Triển khai thành công",
 		"release": release.Name,
@@ -119,34 +139,53 @@ func update(c *gin.Context) {
 	namespace := c.Param("namespace")
 	releaseName := c.Param("release")
 
+	// ⚙️ Init Helm config
 	actionConfig := new(action.Configuration)
 	if err := actionConfig.Init(settings.RESTClientGetter(), namespace, "", log.Printf); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	// ⚙️ Tạo action upgrade
 	upgrade := action.NewUpgrade(actionConfig)
 	upgrade.Namespace = namespace
-	upgrade.ChartPathOptions.RepoURL = chartRepo // <- thêm dòng này
+	upgrade.ChartPathOptions.RepoURL = chartRepo
 
-	// 🆕 Tải lại chart mới từ Harbor mỗi lần update
+	// 🌐 Tải chart mới từ repo
+	log.Printf("🌐 Đang tìm chart '%s' từ repo: %s", chartName, chartRepo)
 	chartPath, err := upgrade.ChartPathOptions.LocateChart(chartName, settings)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không tìm thấy chart: " + err.Error()})
 		return
 	}
+	log.Printf("📥 Đã tải chart tại: %s", chartPath)
+
+	// 📂 Load chart
+	log.Println("📂 Đang load chart mới...")
 	latestChart, err := loader.Load(chartPath)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể load chart: " + err.Error()})
 		return
 	}
 
+	// 🔁 Thực hiện upgrade
 	release, err := upgrade.Run(releaseName, latestChart, nil)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cập nhật thất bại: " + err.Error()})
 		return
 	}
 
+	// 🧹 Xoá chart sau khi dùng xong (dùng goroutine tránh block request)
+	go func(path string) {
+		time.Sleep(2 * time.Second) // Đảm bảo Helm SDK đã dùng xong
+		if err := os.Remove(path); err != nil {
+			log.Printf("⚠️ Không thể xoá chart file sau update: %v", err)
+		} else {
+			log.Println("🧹 Đã xoá chart file sau update:", path)
+		}
+	}(chartPath)
+
+	// ✅ Phản hồi
 	c.JSON(http.StatusOK, gin.H{
 		"message": "🔁 Cập nhật thành công",
 		"release": release.Name,
