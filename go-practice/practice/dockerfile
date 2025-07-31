@@ -1,0 +1,25 @@
+# Stage 1: Build ứng dụng
+FROM golang:1.24 AS builder
+
+WORKDIR /app
+
+# Copy go mod & tidy
+COPY go.mod go.sum ./
+RUN go mod tidy
+
+# Copy source code
+COPY . .
+
+# Build binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o server main.go
+
+# Stage 2: Image nhỏ chỉ chứa binary
+FROM alpine:3.19
+
+WORKDIR /app
+
+# Copy binary từ builder
+COPY --from=builder /app/server .
+
+# Chạy app
+CMD ["./server"]
