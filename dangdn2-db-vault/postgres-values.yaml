@@ -1,0 +1,10 @@
+auth:
+  postgresPassword: "1"
+  username: "dangdn2"
+  password: "1"
+  database: db-part-k8s
+
+primary:
+  persistence: 
+    enabled: true
+    size: 1Gi

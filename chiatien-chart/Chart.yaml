@@ -1,0 +1,8 @@
+apiVersion: v2
+name: chiatien
+version: 0.1.0
+description: Helm chart for chiatien project
+
+# Chiatien project includes: backend (Flask), celery worker, frontend (React), PostgreSQL, Redis
+
+dependencies: []

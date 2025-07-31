@@ -1,0 +1,47 @@
+expose:
+  type: nodePort
+  tls:
+    enabled: false
+  nodePort:
+    name: harbor
+    ports:
+      http:
+        port: 30080
+      https:
+        port: 30443
+      notary:
+        port: 30444
+
+externalURL: http://harbor.local:30080
+
+harborAdminPassword: Dang@211204
+
+persistence:
+  persistentVolumeClaim:
+    registry:
+      size: 5Gi
+      accessMode: ReadWriteOnce
+    jobservice:
+      size: 1Gi
+      accessMode: ReadWriteOnce
+    database:
+      size: 1Gi
+      accessMode: ReadWriteOnce
+    redis:
+      size: 1Gi
+      accessMode: ReadWriteOnce
+    trivy:
+      size: 1Gi
+      accessMode: ReadWriteOnce
+
+chartmuseum:
+  enabled: false  # Bật nếu bạn không dùng chart OCI (helm push)
+
+trivy:
+  enabled: false  # Không cần scan security
+
+notary:
+  enabled: false  # Không cần ký image
+
+metrics:
+  enabled: false  # Không cần Prometheus
