@@ -18,7 +18,7 @@ func main() {
 	h := handler.NewHTTPHandler(svc)
 
 	r := gin.Default()
-	r.POST("/api/deploy/:namespace", h.Deploy)
+	r.POST("/api/deploy/:namespace/:release", h.Deploy)
 	r.POST("/api/update/:namespace/:release", h.Update)
 	r.DELETE("/api/delete/:namespace/:release", h.Delete)
 

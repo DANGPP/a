@@ -19,7 +19,8 @@ func NewHTTPHandler(svc service.HelmService) *HTTPHandler {
 
 func (h *HTTPHandler) Deploy(c *gin.Context) {
 	namespace := c.Param("namespace")
-	result, err := h.svc.Deploy(namespace)
+	releaseName := c.Param("release")
+	result, err := h.svc.Deploy(namespace, releaseName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

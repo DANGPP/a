@@ -18,6 +18,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+
 type helmService struct {
 	clientset  *kubernetes.Clientset
 	kubeconfig string
@@ -25,6 +26,7 @@ type helmService struct {
 	chartName  string
 	chartRepo  string
 	release    string
+	namespace  string
 }
 
 func NewHelmService() (HelmService, error) {
@@ -45,7 +47,6 @@ func NewHelmService() (HelmService, error) {
 		settings:   cli.New(),
 		chartName:  "nginx",
 		chartRepo:  "https://charts.bitnami.com/bitnami",
-		release:    "my-release",
 	}
 
 	return svc, nil
@@ -64,7 +65,7 @@ func (h *helmService) ensureNamespace(namespace string) error {
 	return err
 }
 
-func (h *helmService) Deploy(namespace string) (map[string]interface{}, error) {
+func (h *helmService) Deploy(namespace, releaseName string) (map[string]interface{}, error) {
 	if err := h.ensureNamespace(namespace); err != nil {
 		return nil, fmt.Errorf("cannot ensure namespace: %w", err)
 	}
@@ -75,7 +76,7 @@ func (h *helmService) Deploy(namespace string) (map[string]interface{}, error) {
 	}
 
 	install := action.NewInstall(actionConfig)
-	install.ReleaseName = h.release
+	install.ReleaseName = releaseName
 	install.Namespace = namespace
 	install.ChartPathOptions.RepoURL = h.chartRepo
 
