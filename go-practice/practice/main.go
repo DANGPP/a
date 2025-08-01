@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	kubeconfig      = "C:/Users/Admin/.kube/config"
+	kubeconfig      = "C:/Users/dangt/.kube/config"
 	clientset       *kubernetes.Clientset
 	ctx             = context.TODO()
 	settings        = cli.New()
