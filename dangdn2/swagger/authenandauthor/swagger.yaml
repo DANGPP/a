@@ -1,0 +1,84 @@
+openapi: 3.0.3
+info:
+  title: Auth Service API
+  version: 0.0.1
+  description: API cho module authentication và authorization
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /api/auth/register:
+    post:
+      summary: Admin tạo tài khoản người dùng mới
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, permission]
+              properties:
+                username:
+                  type: string
+                permission:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  renew_token:
+                    type: string
+        '403':
+          description: Không có quyền tạo
+
+  /auth/login:
+    post:
+      summary: Đăng nhập và nhận thông tin người dùng
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  username:
+                    type: string
+                  permission:
+                    type: array
+                    items:
+                      type: string
+        '401':
+          description: Token không hợp lệ hoặc đã hết hạn
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

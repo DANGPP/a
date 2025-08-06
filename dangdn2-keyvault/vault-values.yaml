@@ -1,0 +1,44 @@
+global:
+  tlsDisable: true
+
+server:
+  enabled: true
+  ha:
+    enabled: false
+  dataStorage:
+    enabled: true
+    size: 1Gi
+  dev:
+    enabled: false
+  extraEnvironmentVars:
+    VAULT_LOG_LEVEL: "debug"
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+  affinity: {}
+
+  standalone:
+    enabled: true
+    config: |
+      ui = true
+
+      listener "tcp" {
+        address     = "0.0.0.0:8200"
+        tls_disable = 1
+      }
+
+      storage "file" {
+        path = "/vault/data"
+      }
+
+      disable_mlock = true
+
+ui:
+  enabled: true
+
+injector:
+  enabled: false
