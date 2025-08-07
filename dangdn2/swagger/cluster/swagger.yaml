@@ -1,0 +1,221 @@
+openapi: 3.0.0
+info:
+  title: Cluster Deployment Service API
+  version: "1.0.0"
+  description: API documentation for Authen & Author module
+paths:
+  /clusters:
+    get:
+      summary: Get all clusters
+      tags:
+        - Cluster
+      responses:
+        "200":
+          description: List of all clusters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Cluster"
+
+    post:
+      summary: Add new cluster
+      tags:
+        - Cluster
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClusterInput"
+      responses:
+        "201":
+          description: Cluster added successfully
+
+  /clusters/{id}:
+    get:
+      summary: Get cluster detail
+      tags:
+        - Cluster
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cluster details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cluster"
+
+    put:
+      summary: Update cluster info
+      tags:
+        - Cluster
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClusterInput"
+      responses:
+        "200":
+          description: Cluster updated
+
+    delete:
+      summary: Hide (soft delete) a cluster
+      tags:
+        - Cluster
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Cluster hidden
+
+  /clusters/{id}/namespaces:
+    get:
+      summary: Get namespaces in a cluster
+      tags:
+        - Cluster
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of namespaces
+
+  /clusters/{id}/nodes:
+    get:
+      summary: Get nodes and resources in a cluster
+      tags:
+        - Cluster
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cluster nodes info
+
+  /clusters/{id}/pods:
+    get:
+      summary: Get pods in a cluster
+      tags:
+        - Cluster
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of pods
+
+  /clusters/{id}/pods/by-release:
+    get:
+      summary: Get pods by Helm release
+      tags:
+        - Cluster
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: release
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of pods by release
+
+  /clusters/{id}/pods/{podName}:
+    get:
+      summary: Get pod detail and log
+      tags:
+        - Cluster
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: podName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pod details and logs
+
+  /clusters/{id}/services/by-release:
+    get:
+      summary: Get services by Helm release
+      tags:
+        - Cluster
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: release
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of services by release
+
+components:
+  schemas:
+    Cluster:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        provider:
+          type: string
+        region:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ClusterInput:
+      type: object
+      properties:
+        name:
+          type: string
+        provider:
+          type: string
+        region:
+          type: string
+      required:
+        - name

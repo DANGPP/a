@@ -1,0 +1,63 @@
+openapi: 3.0.0
+info:
+  title: Cluster Deployment Service API
+  version: "1.0.0"
+  description: API documentation for Authen & Author module
+paths:
+  /charts:
+    get:
+      summary: Get all Helm charts
+      tags:
+        - Chart
+      responses:
+        "200":
+          description: List of all charts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Chart"
+
+  /charts/{chartName}:
+    get:
+      summary: Get chart detail
+      tags:
+        - Chart
+      parameters:
+        - name: chartName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Chart details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChartDetail"
+
+  /charts/{chartName}/versions:
+    get:
+      summary: Get versions of a chart
+      tags:
+        - Chart
+      parameters:
+        - name: chartName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of chart versions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+components:
+  schemas:

@@ -1,0 +1,147 @@
+openapi: 3.0.0
+info:
+  title: Deployment Service API
+  version: 1.0.0
+
+paths:
+  /deploy:
+    post:
+      summary: Deploy Helm release
+      tags:
+        - Deployment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cluster_id:
+                  type: string
+                chart_name:
+                  type: string
+                chart_version:
+                  type: string
+                release_name:
+                  type: string
+                values:
+                  type: object
+              required:
+                - cluster_id
+                - chart_name
+                - chart_version
+                - release_name
+      responses:
+        "200":
+          description: Deployment success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /deploy/releases:
+    get:
+      summary: Get all Helm releases
+      tags:
+        - Deployment
+      responses:
+        "200":
+          description: List of releases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Release"
+
+  /deploy/releases/{releaseName}:
+    get:
+      summary: Get Helm release details
+      tags:
+        - Deployment
+      parameters:
+        - name: releaseName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Release details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReleaseDetail"
+
+    put:
+      summary: Update Helm release
+      tags:
+        - Deployment
+      parameters:
+        - name: releaseName
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chart_version:
+                  type: string
+                values:
+                  type: object
+      responses:
+        "200":
+          description: Update successful
+
+    delete:
+      summary: Uninstall Helm release
+      tags:
+        - Deployment
+      parameters:
+        - name: releaseName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Uninstall successful
+
+components:
+  schemas:
+    Release:
+      type: object
+      properties:
+        name:
+          type: string
+        chart:
+          type: string
+        version:
+          type: string
+        namespace:
+          type: string
+
+    ReleaseDetail:
+      type: object
+      properties:
+        name:
+          type: string
+        chart:
+          type: string
+        version:
+          type: string
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        values:
+          type: object

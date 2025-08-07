@@ -1,84 +1,95 @@
-openapi: 3.0.3
+openapi: 3.0.0
 info:
-  title: Auth Service API
-  version: 0.0.1
-  description: API cho module authentication và authorization
-
-servers:
-  - url: http://localhost:8080
+  title: Cluster Deployment Service API
+  version: "1.0.0"
+  description: API documentation for Authen & Author module
 
 paths:
-  /api/auth/register:
+  /auth/register:
     post:
-      summary: Admin tạo tài khoản người dùng mới
-      security:
-        - bearerAuth: []
+      summary: Register and get token
+      tags:
+        - Auth
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [username, permission]
-              properties:
-                username:
-                  type: string
-                permission:
-                  type: array
-                  items:
-                    type: string
-      responses:
-        '201':
-          description: Tạo thành công
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-                  renew_token:
-                    type: string
-        '403':
-          description: Không có quyền tạo
-
-  /auth/login:
-    post:
-      summary: Đăng nhập và nhận thông tin người dùng
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [username, password]
               properties:
                 username:
                   type: string
                 password:
                   type: string
+              required:
+                - username
+                - password
       responses:
-        '200':
-          description: Thành công
+        "200":
+          description: Tokens returned
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  id:
+                  access_token:
                     type: string
-                  username:
+                  renew_token:
                     type: string
-                  permission:
-                    type: array
-                    items:
-                      type: string
-        '401':
-          description: Token không hợp lệ hoặc đã hết hạn
 
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+  /auth/renew:
+    post:
+      summary: Renew access token
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                renew_token:
+                  type: string
+              required:
+                - renew_token
+      responses:
+        "200":
+          description: New access token returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+
+  /auth/validate:
+    post:
+      summary: Validate user credentials
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        "200":
+          description: Valid user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
