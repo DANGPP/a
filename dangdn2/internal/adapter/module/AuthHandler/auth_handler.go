@@ -1,40 +1,25 @@
-package aut_http
+package AuthHandler
 
 import (
 	"net/http"
-	// "time"
-
 	"test/internal/core/module/AuthService"
 
 	"github.com/gin-gonic/gin"
 )
 
-type HTTPHandler struct {
-	svc *auth_service.TokenService
+type AuthHandler struct {
+	svc *AuthService.AuthService
 }
 
-func NewHTTPHandler(svc *auth_service.TokenService) *HTTPHandler {
-	return &HTTPHandler{svc: svc}
+func NewAuthHandler(svc *AuthService.AuthService) *AuthHandler {
+	return &AuthHandler{svc: svc}
 }
 
-func (h *HTTPHandler) IssueToken(c *gin.Context) {
-	// TODO: Check auth của admin ở đây
+func (t *AuthHandler) RegisterToken(c *gin.Context) {
+	var body AuthService.Bodi
 
-	var req struct {
-		Service string `json:"service"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "service is required"})
-		return
-	}
+	c.ShouldBindJSON(&body)
+	token, _ := t.svc.CreateToken(body, c.Request.Context())
 
-	token, err := h.svc.GenToken(req.Service)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "cannot generate token"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"token": token,
-	})
+	c.JSON(http.StatusOK, gin.H{"token": token})
 }

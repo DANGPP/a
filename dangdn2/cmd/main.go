@@ -1,27 +1,39 @@
 package main
 
 import (
-	// "log"
-	// "os"
+	"context"
+	"os"
+	"log"
 
-	auth_http "test/internal/adapter/module/AuthHandler"
-	auth_service "test/internal/core/module/AuthService"
+	"test/internal/adapter/module/AuthHandler"
+	"test/internal/core/module/AuthService"
 
 	"github.com/gin-gonic/gin"
-	// "github.com/jmoiron/sqlx"
-	// _ "github.com/lib/pq"
-	// "github.com/redis/go-redis/v9"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
+	// lay secret Ky
+	secretKey := os.Getenv("SECRET_KEY")
+	if secretKey == "" {
+		secretKey = "AreUGay"
+	}
+	dbURL:= os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		dbURL =  "postgres://postgres:1@localhost:5433/auth?sslmode=disable"
+	}
+
+	//connect db
+	pool,err := pgxpool.New(context.Background(),dbURL)
+	if err != nil {
+		log.Fatal("error connect gay:", err)
+	}
+	defer pool.Close()
+
+	svc := AuthService.NewAuthService(secretKey, pool)
+	h := AuthHandler.NewAuthHandler(svc)
 	r := gin.Default()
-
-	// Tạo service & handler
-	svc := auth_service.NewTokenService("my_super_secret_key")
-	h := auth_http.NewHTTPHandler(svc)
-
-	// Route
-	r.POST("/api/register", h.IssueToken)
-
+	r.POST("/api/register", h.RegisterToken)
 	r.Run(":8080")
 }
