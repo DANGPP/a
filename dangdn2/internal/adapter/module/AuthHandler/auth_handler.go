@@ -50,3 +50,10 @@ func (t *AuthHandler) ActiveTokenFull(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"status": status})
 }
+
+// 5. xem full token
+func (t *AuthHandler) GetAllToken(c *gin.Context) {
+	token, _ := t.svc.GetAllToken(c.Request.Context())
+
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}

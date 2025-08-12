@@ -7,14 +7,16 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"gorm.io/gorm"
 
+	// "gorm.io/driver/postgres"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
+	// "github.com/jackc/pgx/v5/pgxpool"
 )
 
 type AuthService struct {
 	secretKey string
-	db        *pgxpool.Pool
+	db        *gorm.DB
 }
 
 type Bodi struct {
@@ -22,7 +24,16 @@ type Bodi struct {
 	Ttl         int64  `json:"ttl"`
 }
 
-func NewAuthService(secretKey string, db *pgxpool.Pool) *AuthService {
+type Token struct {
+	UUID      string `gorm:"primaryKey";type:"uuid"`
+	Service   string
+	Exp       int64
+	Iat       int64
+	HashToken string
+	Status    string
+}
+
+func NewAuthService(secretKey string, db *gorm.DB) *AuthService {
 	return &AuthService{secretKey: secretKey,
 		db: db,
 	}
@@ -47,12 +58,16 @@ func (a *AuthService) CreateToken(bd Bodi, ctx context.Context) (string, error) 
 	hashHex := hex.EncodeToString(hash[:])
 
 	// Save to DB
-	_, err := a.db.Exec(ctx,
-		`INSERT INTO tokens (uuid, service, exp, iat, hash_token, status) 
-		 VALUES ($1, $2, $3, $4, $5, $6)`,
-		tokenUUID, bd.ServiceName, now+bd.Ttl, now, hashHex, "active",
-	)
-	if err != nil {
+	newToken := Token{
+		UUID:      tokenUUID,
+		Service:   bd.ServiceName,
+		Exp:       now + bd.Ttl,
+		Iat:       now,
+		HashToken: hashHex,
+		Status:    "active",
+	}
+
+	if err := a.db.WithContext(ctx).Create(&newToken).Error; err != nil {
 		return "", err
 	}
 
@@ -61,10 +76,10 @@ func (a *AuthService) CreateToken(bd Bodi, ctx context.Context) (string, error) 
 
 // 2. thu hồi token
 func (a *AuthService) RevokeToken(uuid string, ctx context.Context) (string, error) {
-	_, err := a.db.Exec(ctx,
-		`update tokens set status = $1 where uuid = $2 `, "revoke", uuid,
-	)
-	if err != nil {
+	if err := a.db.WithContext(ctx).
+		Model(&Token{}).
+		Where("uuid = ?", uuid).
+		Update("status", "revoke").Error; err != nil {
 		return "lỗi ở auth_service.go", err
 	}
 	return "revoke", nil
@@ -72,10 +87,9 @@ func (a *AuthService) RevokeToken(uuid string, ctx context.Context) (string, err
 
 // 3. thu hồi token full
 func (a *AuthService) RevokeTokenFull(ctx context.Context) (string, error) {
-	_, err := a.db.Exec(ctx,
-		`update tokens set status = $1 `, "revoke",
-	)
-	if err != nil {
+	if err := a.db.WithContext(ctx).
+		Model(&Token{}).
+		Update("status", "revoke").Error; err != nil {
 		return "lỗi ở auth_service.go", err
 	}
 	return "revokeAll", nil
@@ -83,11 +97,18 @@ func (a *AuthService) RevokeTokenFull(ctx context.Context) (string, error) {
 
 // 3. active token
 func (a *AuthService) ActiveTokenFull(ctx context.Context) (string, error) {
-	_, err := a.db.Exec(ctx,
-		`update tokens set status = $1 `, "active",
-	)
-	if err != nil {
+	if err := a.db.WithContext(ctx).
+		Model(&Token{}).
+		Update("status", "active").Error; err != nil {
 		return "lỗi ở auth_service.go", err
 	}
 	return "ActiveAll", nil
+}
+// 4. lấy full token
+func (a *AuthService) GetAllToken(ctx context.Context)([]Token,error){
+	var tokens []Token
+	if err := a.db.WithContext(ctx).Find(&tokens).Error; err != nil {
+		return nil, err
+	}
+	return tokens, nil
 }
