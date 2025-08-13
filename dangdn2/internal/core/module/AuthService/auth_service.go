@@ -2,8 +2,7 @@ package AuthService
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
+
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -14,30 +13,12 @@ import (
 	// "github.com/jackc/pgx/v5/pgxpool"
 )
 
-type AuthService struct {
-	secretKey string
-	db        *gorm.DB
-}
-
-type Bodi struct {
-	ServiceName string `json:"serviceName"`
-	Ttl         int64  `json:"ttl"`
-}
-
-type Token struct {
-	UUID      string `gorm:"primaryKey";type:"uuid"`
-	Service   string
-	Exp       int64
-	Iat       int64
-	HashToken string
-	Status    string
-}
-
 func NewAuthService(secretKey string, db *gorm.DB) *AuthService {
 	return &AuthService{secretKey: secretKey,
 		db: db,
 	}
 }
+
 
 // 1. sinh token
 func (a *AuthService) CreateToken(bd Bodi, ctx context.Context) (string, error) {
@@ -47,16 +28,17 @@ func (a *AuthService) CreateToken(bd Bodi, ctx context.Context) (string, error) 
 	claims := jwt.MapClaims{
 		"uuid":    tokenUUID,
 		"service": bd.ServiceName,
-		"exp":     now + bd.Ttl, // Token hết hạn sau 15 phút
+		"exp":     now + bd.Ttl,
 		"iat":     now,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, _ := token.SignedString([]byte(a.secretKey))
 
 	// Hash token
-	hash := sha256.Sum256([]byte(tokenString))
-	hashHex := hex.EncodeToString(hash[:])
+	// hash := sha256.Sum256([]byte(tokenString))
+	// hashHex := hex.EncodeToString(hash[:])
 
+	hashHex := hastoken(tokenString)
 	// Save to DB
 	newToken := Token{
 		UUID:      tokenUUID,
@@ -104,8 +86,9 @@ func (a *AuthService) ActiveTokenFull(ctx context.Context) (string, error) {
 	}
 	return "ActiveAll", nil
 }
+
 // 4. lấy full token
-func (a *AuthService) GetAllToken(ctx context.Context)([]Token,error){
+func (a *AuthService) GetAllToken(ctx context.Context) ([]Token, error) {
 	var tokens []Token
 	if err := a.db.WithContext(ctx).Find(&tokens).Error; err != nil {
 		return nil, err
