@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/vault/api"
 
-
 	"github.com/google/uuid"
 )
 
@@ -24,11 +23,11 @@ func NewAnotherService(vaultAddress, vaultToken, path string) *Another {
 }
 
 // 1. gen và save secret key vào vault
-func (a *Another) GenSecretKey(length int) (string, string, error) {
+func (a *Another) GenSecretKey() (string, string, error) {
 	// 1. Sinh UUID
 	id := uuid.NewString()
 
-	bytes := make([]byte, length)
+	bytes := make([]byte, 32)
 	_, err := rand.Read(bytes)
 	if err != nil {
 		return "ko gen ddc secretkey", "ko gen ddc secretkey", err
@@ -72,10 +71,8 @@ func (a *Another) GetSecretKey(uuid string) (string, error) {
 
 	data, _ := dataRaw.(map[string]interface{})
 
-
 	// Lấy secretKey (đúng tên trường trong Vault)
 	key, _ := data["secretKey"].(string)
-
 
 	return key, nil
 }

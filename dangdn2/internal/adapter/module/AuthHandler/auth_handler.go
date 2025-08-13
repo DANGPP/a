@@ -14,15 +14,29 @@ type AuthHandler struct {
 func NewAuthHandler(svc *AuthService.AuthService) *AuthHandler {
 	return &AuthHandler{svc: svc}
 }
+func (t *AuthHandler) GetSecretKey(c *gin.Context) {
+	var boddi struct {
+		UUID string `json:"uuid"`
+	}
+	c.ShouldBindJSON(&boddi)
+	secretKey := t.svc.Checksecretkey(boddi.UUID)
+	c.JSON(200, gin.H{
+		"uuid":      boddi.UUID,
+		"secretKey": secretKey,
+	})
+}
 
 // 1. tạo token mới
 func (t *AuthHandler) RegisterToken(c *gin.Context) {
 	var body AuthService.Bodi
 
 	c.ShouldBindJSON(&body)
-	token, _ := t.svc.CreateToken(body, c.Request.Context())
+	token,secretkey, _ := t.svc.CreateToken(body, c.Request.Context())
 
-	c.JSON(http.StatusOK, gin.H{"token": token})
+	c.JSON(http.StatusOK, gin.H{
+		"token": token,
+		"secretKey": secretkey,
+	})
 }
 
 // 2. thu hồi token uuid

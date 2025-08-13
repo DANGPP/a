@@ -8,20 +8,24 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"gorm.io/gorm"
 
-	// "gorm.io/driver/postgres"
 	"github.com/google/uuid"
-	// "github.com/jackc/pgx/v5/pgxpool"
+
+	"test/internal/core/module/anotherService"
 )
 
-func NewAuthService(secretKey string, db *gorm.DB) *AuthService {
-	return &AuthService{secretKey: secretKey,
-		db: db,
+func NewAuthService(ano *anotherService.Another, db *gorm.DB) *AuthService {
+	return &AuthService{
+		ano: ano,
+		db:  db,
 	}
 }
-
+func (a *AuthService) Checksecretkey(uuid string) string {
+	secretKey, _ := a.ano.GetSecretKey(uuid)
+	return secretKey
+}
 
 // 1. sinh token
-func (a *AuthService) CreateToken(bd Bodi, ctx context.Context) (string, error) {
+func (a *AuthService) CreateToken(bd Bodi, ctx context.Context) (string, string, error) {
 	now := time.Now().Unix()
 	tokenUUID := uuid.New().String()
 
@@ -32,7 +36,9 @@ func (a *AuthService) CreateToken(bd Bodi, ctx context.Context) (string, error) 
 		"iat":     now,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, _ := token.SignedString([]byte(a.secretKey))
+
+	secretKey, _ := a.ano.GetSecretKey(bd.UUID)
+	tokenString, _ := token.SignedString([]byte(secretKey))
 
 	// Hash token
 	// hash := sha256.Sum256([]byte(tokenString))
@@ -50,10 +56,10 @@ func (a *AuthService) CreateToken(bd Bodi, ctx context.Context) (string, error) 
 	}
 
 	if err := a.db.WithContext(ctx).Create(&newToken).Error; err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return tokenString, nil
+	return tokenString, secretKey, nil
 }
 
 // 2. thu hồi token

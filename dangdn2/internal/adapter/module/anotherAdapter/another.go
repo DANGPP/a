@@ -16,13 +16,8 @@ func NewAnotherAdapter(svc *anotherService.Another) *AnotherAdapter {
 }
 
 func (a *AnotherAdapter) GenSecretKey(c *gin.Context) {
-	var bodi struct {
-		Length int `json:"length"`
-	}
 
-	c.ShouldBindJSON(&bodi)
-
-	IDkey, SecretKey, _ := a.svc.GenSecretKey(bodi.Length)
+	IDkey, SecretKey, _ := a.svc.GenSecretKey()
 	c.JSON(http.StatusOK, gin.H{
 		"KeyID":  IDkey,
 		"key ne": SecretKey})
