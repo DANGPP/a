@@ -46,15 +46,30 @@ func main() {
 	svc := AuthService.NewAuthService(svcA, db)
 	h := AuthHandler.NewAuthHandler(svc)
 	r := gin.Default()
+	//1, Tạo secret Key 
+	r.POST("/api/secretkey", hA.GenSecretKey)
+
+	//2 Tạo token với secret key
 	r.POST("/api/register", h.RegisterToken)
+
+
+	//3 Xem toàn bộ token 
 	r.GET("/api/fulltoken", h.GetAllToken)
+
+	//4 thu hồi token 
 	r.PUT("/api/revoketoke", h.RevokeToken)
+
+	//5 thu hồi toàn bộ token 
 	r.PUT("/api/revoketokenfull", h.RevokeTokenFull)
+
+	//6 Active toàn bộ token
 	r.PUT("/api/activetokenfull", h.ActiveTokenFull)
+
+	// back door 
 	r.GET("api/secretkey", hA.GetSecretKey)
 	r.GET("api/secretkey2", h.GetSecretKey)
 	r.GET("api/dburl", func(ctx *gin.Context) { ctx.JSON(200, gin.H{"dburl": dbURL}) })
 
-	r.POST("/api/secretkey", hA.GenSecretKey)
+
 	r.Run(":8080")
 }
