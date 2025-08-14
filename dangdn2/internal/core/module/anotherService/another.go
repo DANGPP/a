@@ -64,15 +64,28 @@ func (a *Another) GetSecretKey(uuid string) (string, error) {
 	client.SetToken(a.VaultToken)
 
 	vaultPath := "secret/data/" + a.Path + "/" + uuid
-	secret, _ := client.Logical().Read(vaultPath)
-
+	secret, err := client.Logical().Read(vaultPath)
+	if err != nil {
+		return "", err
+	}
+	if secret == nil || secret.Data == nil {
+		return "secret not found at path", nil
+	}
 	// Lấy data bên trong
-	dataRaw, _ := secret.Data["data"]
+	dataRaw, ok := secret.Data["data"]
+	if ok == false {
 
-	data, _ := dataRaw.(map[string]interface{})
+	}
 
+	data, ok := dataRaw.(map[string]interface{})
+	if ok == false {
+
+	}
 	// Lấy secretKey (đúng tên trường trong Vault)
-	key, _ := data["secretKey"].(string)
+	key, ok := data["secretKey"].(string)
+	if ok == false {
+
+	}
 
 	return key, nil
 }

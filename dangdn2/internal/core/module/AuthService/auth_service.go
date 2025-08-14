@@ -19,9 +19,12 @@ func NewAuthService(ano *anotherService.Another, db *gorm.DB) *AuthService {
 		db:  db,
 	}
 }
-func (a *AuthService) Checksecretkey(uuid string) string {
-	secretKey, _ := a.ano.GetSecretKey(uuid)
-	return secretKey
+func (a *AuthService) Checksecretkey(uuid string) (string,error) {
+	secretKey, err := a.ano.GetSecretKey(uuid)
+	if err!=nil {
+		return "auth_service line 25", err
+	}
+	return secretKey, nil
 }
 
 // 1. sinh token
@@ -37,15 +40,18 @@ func (a *AuthService) CreateToken(bd Bodi, ctx context.Context) (string, string,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	secretKey, _ := a.ano.GetSecretKey(bd.UUID)
-	tokenString, _ := token.SignedString([]byte(secretKey))
+	secretKey, err := a.ano.GetSecretKey(bd.UUID)
+	if err != nil {
+		return "auth_service line 45","lỗi không get đc secretkey", err
+	}
 
-	// Hash token
-	// hash := sha256.Sum256([]byte(tokenString))
-	// hashHex := hex.EncodeToString(hash[:])
-
+	tokenString, err := token.SignedString([]byte(secretKey))
+	if err != nil {
+		return "auth_service line 50", "Lỗi ko to string token",  err
+	}
 	hashHex := hastoken(tokenString)
-	// Save to DB
+
+
 	newToken := Token{
 		UUID:      tokenUUID,
 		Service:   bd.ServiceName,
@@ -56,7 +62,7 @@ func (a *AuthService) CreateToken(bd Bodi, ctx context.Context) (string, string,
 	}
 
 	if err := a.db.WithContext(ctx).Create(&newToken).Error; err != nil {
-		return "", "", err
+		return "auth_service.go", "line 55", err
 	}
 
 	return tokenString, secretKey, nil
