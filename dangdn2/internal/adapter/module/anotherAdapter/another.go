@@ -35,3 +35,10 @@ func (a *AnotherAdapter) GetSecretKey(c *gin.Context) {
 		// "KeyID":  IDkey,
 		"key ne": SecretKey})
 }
+
+func (a *AnotherAdapter) GetFullUUIDkey(c *gin.Context) {
+	listuuid, _ := a.svc.GetFullUUIDkey()
+	c.JSON(http.StatusOK, gin.H{
+		"uuid": listuuid,
+	})
+}

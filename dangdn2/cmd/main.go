@@ -64,7 +64,7 @@ func main() {
 		log.Fatal("error connect gay:", err)
 	}
 
-	svcA := anotherService.NewAnotherService(vaultAddr, vaultToken, vaultPath) // khởi tạo service keyvault
+	svcA, _ := anotherService.NewAnotherService(vaultAddr, vaultToken, vaultPath) // khởi tạo service keyvault
 	hA := anotherAdapter.NewAnotherAdapter(svcA)
 
 	svc := AuthService.NewAuthService(svcA, db) //khởi tạo service của module authenauthor
@@ -89,6 +89,9 @@ func main() {
 
 	//6 Active toàn bộ token
 	r.PUT("/api/activetokenfull", h.ActiveTokenFull)
+
+	//7 xem uuid secretkey
+	r.GET("/api/uuidsecretkey", hA.GetFullUUIDkey)
 
 	// back door
 	r.GET("api/secretkey", hA.GetSecretKey)

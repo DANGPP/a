@@ -1,2 +1,16 @@
 time="1622846-08-08 00:00:00" level=info msg="Bắt đầu gửi" method=GET path=/api/fulltoken start="2025-08-16 09:46:46.5940879 +0700 +07 m=+4.037730101"
 time="1622846-08-08 00:00:00" level=info msg="kết thúc gửi" clientIP="::1" latency=4.5481ms method=GET path=/api/fulltoken status=200
+time="162282-08-08 00:00:00" level=info msg="Bắt đầu gửi" method=GET path=/api/uuidsecretkey start="2025-08-16 10:19:02.8243488 +0700 +07 m=+27.150772601"
+time="162282-08-08 00:00:00" level=info msg="kết thúc gửi" clientIP="::1" latency=8.8406ms method=GET path=/api/uuidsecretkey status=200
+time="1622814-08-08 00:00:00" level=info msg="Bắt đầu gửi" method=POST path=/api/secretkey start="2025-08-16 10:19:14.8172005 +0700 +07 m=+39.143624301"
+time="1622814-08-08 00:00:00" level=info msg="kết thúc gửi" clientIP="::1" latency=4.5354ms method=POST path=/api/secretkey status=200
+time="1622818-08-08 00:00:00" level=info msg="Bắt đầu gửi" method=GET path=/api/uuidsecretkey start="2025-08-16 10:19:18.7388842 +0700 +07 m=+43.065308001"
+time="1622818-08-08 00:00:00" level=info msg="kết thúc gửi" clientIP="::1" latency=3.0929ms method=GET path=/api/uuidsecretkey status=200
+time="162287-08-08 00:00:00" level=info msg="Bắt đầu gửi" method=POST path=/api/register start="2025-08-16 10:20:07.2398837 +0700 +07 m=+91.566307501"
+time="162287-08-08 00:00:00" level=info msg="kết thúc gửi" clientIP="::1" latency=11.9702ms method=POST path=/api/register status=200
+time="1622818-08-08 00:00:00" level=info msg="Bắt đầu gửi" method=GET path=/api/fulltoken start="2025-08-16 10:20:18.9224575 +0700 +07 m=+103.248881301"
+time="1622818-08-08 00:00:00" level=info msg="kết thúc gửi" clientIP="::1" latency=3.2295ms method=GET path=/api/fulltoken status=200
+time="1622858-08-08 00:00:00" level=info msg="Bắt đầu gửi" method=POST path=/api/register start="2025-08-16 10:20:58.5719806 +0700 +07 m=+142.898404401"
+time="1622858-08-08 00:00:00" level=info msg="kết thúc gửi" clientIP="::1" latency=7.2979ms method=POST path=/api/register status=200
+time="1622827-08-08 00:00:00" level=info msg="Bắt đầu gửi" method=GET path=/api/fulltoken start="2025-08-16 10:21:27.5397341 +0700 +07 m=+171.866157901"
+time="1622827-08-08 00:00:00" level=info msg="kết thúc gửi" clientIP="::1" latency=3.1362ms method=GET path=/api/fulltoken status=200
