@@ -1,0 +1,3 @@
+time="15008-815-28 14:35:52" level=info msg="Incoming request" func=main.main.func1 file="D:/thuctap/a/a/go-practice/logExample/main.go:38" ip="::1" method=GET path=/ping query=
+time="15008-815-28 14:35:52" level=info msg="Processing request" func=main.main.func2 file="D:/thuctap/a/a/go-practice/logExample/main.go:52" handler=ping
+time="15008-815-28 14:35:52" level=info msg="response sent" func=main.main.func1 file="D:/thuctap/a/a/go-practice/logExample/main.go:45" duration=0s status=200
