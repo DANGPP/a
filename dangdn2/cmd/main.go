@@ -3,15 +3,19 @@ package main
 import (
 	// "context"
 	"fmt"
-	"log"
+	// "log"
 	"os"
+	"time"
 
 	"test/internal/adapter/module/AuthHandler"
 	"test/internal/adapter/module/anotherAdapter"
 	"test/internal/core/module/AuthService"
 	"test/internal/core/module/anotherService"
 
+	"test/internal/infra/logger"
+
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -19,7 +23,29 @@ import (
 	"github.com/joho/godotenv"
 )
 
+func LoggerMiddle(log *logrus.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		log.WithFields(logrus.Fields{
+			"method": c.Request.Method,
+			"path":   c.Request.URL.Path,
+			"start":  start,
+		}).Info("Bắt đầu gửi")
+		c.Next()
+		latency := time.Since(start)
+		log.WithFields(logrus.Fields{
+			"status":   c.Writer.Status(),
+			"method":   c.Request.Method,
+			"path":     c.Request.URL.Path,
+			"latency":  latency,
+			"clientIP": c.ClientIP(),
+		}).Info("kết thúc gửi")
+
+	}
+}
+
 func main() {
+	log := logger.Init(logrus.DebugLevel)
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Println("gay vl")
@@ -28,7 +54,7 @@ func main() {
 
 	vaultAddr := os.Getenv("VAULT_ADDR") // "http://127.0.0.1:8205"
 
-	vaultToken := os.Getenv("VAULT_TOKEN") // 
+	vaultToken := os.Getenv("VAULT_TOKEN") //
 
 	vaultPath := os.Getenv("VAULT_PATH") //"fmon_deployment_secretkey"
 
@@ -43,32 +69,31 @@ func main() {
 
 	svc := AuthService.NewAuthService(svcA, db) //khởi tạo service của module authenauthor
 	h := AuthHandler.NewAuthHandler(svc)
-	
-	r := gin.Default()
-	//1, Tạo secret Key 
+
+	r := gin.New()
+	r.Use(LoggerMiddle(log), gin.Recovery())
+	//1, Tạo secret Key
 	r.POST("/api/secretkey", hA.GenSecretKey)
 
 	//2 Tạo token với secret key
 	r.POST("/api/register", h.RegisterToken)
 
-
-	//3 Xem toàn bộ token 
+	//3 Xem toàn bộ token
 	r.GET("/api/fulltoken", h.GetAllToken)
 
-	//4 thu hồi token 
+	//4 thu hồi token
 	r.PUT("/api/revoketoke", h.RevokeToken)
 
-	//5 thu hồi toàn bộ token 
+	//5 thu hồi toàn bộ token
 	r.PUT("/api/revoketokenfull", h.RevokeTokenFull)
 
 	//6 Active toàn bộ token
 	r.PUT("/api/activetokenfull", h.ActiveTokenFull)
 
-	// back door 
+	// back door
 	r.GET("api/secretkey", hA.GetSecretKey)
 	r.GET("api/secretkey2", h.GetSecretKey)
 	r.GET("api/dburl", func(ctx *gin.Context) { ctx.JSON(200, gin.H{"dburl": dbURL}) })
-
 
 	r.Run(":8080")
 }
